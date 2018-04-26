@@ -4,6 +4,7 @@ import nodeFileEval from 'node-file-eval';
 import process from 'process';
 import { execAsync } from 'async-child-process';
 import { TextDecoder, TextEncoder } from 'text-encoding';
+import { exec } from 'child_process';
 
 describe('rust-native-wasm-loader', () => {
   it('loads a simple cargo project', async () => {
@@ -11,13 +12,10 @@ describe('rust-native-wasm-loader', () => {
 
     const options = {
       release: true,
+
     };
 
-    const preRules = [{
-      loader: 'wasm-loader'
-    }];
-
-    const stats = await runLoader('simple.js', 'simple', options, preRules);
+    const stats = await runLoader('simple.js', 'simple', options);
 
     await expectToMatchSnapshot(stats);
   });
@@ -29,14 +27,10 @@ describe('rust-native-wasm-loader', () => {
       release: true,
     };
 
-    const preRules = [{
-      loader: 'wasm-loader'
-    }];
-
     // Run clean to ensure that the warning is generated every time
     await execAsync('cargo clean', {cwd: path.resolve(__dirname, 'fixtures', 'mywarninglib')});
 
-    const stats = await runLoader('warning.js', 'warning', options, preRules);
+    const stats = await runLoader('warning.js', 'warning', options);
 
     await expectToMatchSnapshot(stats);
   });
@@ -61,11 +55,7 @@ describe('rust-native-wasm-loader', () => {
       gc: true,
     };
 
-    const preRules = [{
-      loader: 'wasm-loader'
-    }];
-
-    const stats = await runLoader('simple.js', 'simple-gc', options, preRules);
+    const stats = await runLoader('simple.js', 'simple-gc', options);
 
     await expectToMatchSnapshot(stats);
   });
@@ -115,14 +105,16 @@ describe('rust-native-wasm-loader', () => {
 
     const otherRules = [{
       test: /\.(js|rs|ts)$/,
-      use: [{
-        loader: 'ts-loader',
-        options: {
-          appendTsSuffixTo: [/\.rs$/],
-          onlyCompileBundledFiles: true,
-          colors: false
+      use: [
+        {
+          loader: 'ts-loader',
+          options: {
+            appendTsSuffixTo: [/\.rs$/],
+            onlyCompileBundledFiles: false,
+            colors: false
+          }
         }
-      }]
+      ]
     }];
 
     const stats = await runLoader('wasmbindgen.ts', 'wasmbindgen-ts', options, [], otherRules);
@@ -228,24 +220,17 @@ async function expectToMatchSnapshot(stats) {
   expect(warnings).toMatchSnapshot('warnings');
   expect(dependencies).toMatchSnapshot('dependencies');
 
+  console.error(errors);
+
   const assetPath = stats.compilation.assets['index.js'].existsAt;
-  try {
-    const module = await nodeFileEval(assetPath, {
-      encoding: 'utf-8',
-      context: {
-        require,
-        Buffer,
-        TextDecoder,
-        TextEncoder,
-        console,
-        process,
-        __dirname: path.dirname(assetPath)
-      }
-    });
-    expect(await module.run()).toMatchSnapshot('output');
-  } catch (e) {
-    expect(e.message.split('\n')[0]).toMatchSnapshot('failure');
+  
+  const result = await execScript(assetPath)
+
+  expect(result.stdout).toMatchSnapshot('output');
+  if(result.error !== null) {
+    expect(result.stderr).toMatchSnapshot('failure');
   }
+  
 }
 
 function runLoader(fixture, test, options, preRules = [], otherRules = []) {
@@ -266,6 +251,7 @@ function runLoader(fixture, test, options, preRules = [], otherRules = []) {
         }])
       }])
     },
+    mode: 'development',
     node: {
       __dirname: false,
     }
@@ -280,4 +266,13 @@ function runLoader(fixture, test, options, preRules = [], otherRules = []) {
       resolve(stats);
     }
   }))
+}
+
+
+function execScript(assetPath) {
+  return new Promise((resolve,reject) => {
+    exec(`node ${assetPath}`, (error, stdout, stderr) => {
+      resolve({error,stdout,stderr});
+    });
+  });
 }

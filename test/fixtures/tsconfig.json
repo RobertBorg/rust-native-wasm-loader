@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
     "sourceMap": true,
-    "allowJs": true
+    "allowJs": true,
+    "lib": [
+      "ES2015"
+    ]
   }
 }

@@ -1,1 +1,1 @@
-import loadWasm from './myerrorlib/src/lib.rs';
+import('./myerrorlib/src/lib.rs')

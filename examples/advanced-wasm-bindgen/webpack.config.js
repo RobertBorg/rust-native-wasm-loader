@@ -5,6 +5,7 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
+  mode: 'production',
   bail: true,
   devtool: 'source-map',
   entry: './src',
@@ -34,24 +35,18 @@ module.exports = {
                 loader: 'babel-loader',
                 options: {
                   compact: true,
-                }
+                },
               },
               {
                 loader: 'rust-native-wasm-loader',
                 options: {
                   release: true,
                   wasmBindgen: true,
-                  wasm2es6js: true,
+                  wasm2es6js: false,
+                  gc: true,
                 }
               }
             ]
-          },
-          {
-            loader: require.resolve('file-loader'),
-            exclude: [/\.(js|jsx|mjs)$/, /\.html$/, /\.json$/],
-            options: {
-              name: 'static/media/[name].[hash:8].[ext]',
-            },
           },
         ],
       },
@@ -74,26 +69,5 @@ module.exports = {
         minifyURLs: true,
       },
     }),
-    /*new webpack.optimize.UglifyJsPlugin({
-      compress: {
-        warnings: false,
-        comparisons: false,
-      },
-      mangle: {
-        safari10: true,
-      },
-      output: {
-        comments: false,
-        ascii_only: true,
-      },
-      sourceMap: true,
-    }),*/
   ],
-  node: {
-    dgram: 'empty',
-    fs: 'empty',
-    net: 'empty',
-    tls: 'empty',
-    child_process: 'empty',
-  },
 };

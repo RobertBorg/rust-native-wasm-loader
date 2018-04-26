@@ -18,7 +18,7 @@ const DEFAULT_OPTIONS = {
   typescript: false,
 };
 
-const SUPPORTED_WASM_BINDGEN_VERSION = '^0.1.1';
+const SUPPORTED_WASM_BINDGEN_VERSION = '^0.2';
 const SUPPORTED_CARGO_WEB_VERSION = '^0.6.9';
 
 const loadWasmBindgen = async function (self, {release, target, wasmBindgen}, srcDir) {
@@ -37,10 +37,16 @@ const loadWasmBindgen = async function (self, {release, target, wasmBindgen}, sr
   if (!wasmFile) {
     throw new BuildError('No wasm file produced as build output');
   }
-  const suffixlessPath = wasmFile.slice(0, -'.wasm'.length);
-  const moduleDir = path.dirname(wasmFile);
 
-  const wasmBindgenCmd = ['wasm-bindgen', wasmFile, '--out-dir', moduleDir];
+  
+  const moduleDir = path.dirname(wasmFile);
+  const baseName = path.basename(wasmFile, '.wasm');
+
+  const bindGenOut = path.resolve(moduleDir,'bind_gen');
+  const suffixlessPath = path.resolve(bindGenOut, baseName);
+
+  await fse.ensureDir(bindGenOut);
+  const wasmBindgenCmd = ['wasm-bindgen', wasmFile, '--out-dir', bindGenOut];
 
   if (wasmBindgen.typescript) {
     wasmBindgenCmd.push('--typescript');
@@ -82,16 +88,28 @@ import * as wasm from ${wasmRequest};
 export const wasmBooted: Promise<boolean> = wasm.booted
 `;
     }
+    console.error(tsdPath);
+    console.error(jsPath);
+    console.error(wasmPath);
+    console.error(contents);
     return contents;
   } else {
     let contents = await fse.readFile(suffixlessPath + '.js', 'utf-8');
     if (wasmBindgen.wasm2es6js) {
-      contents += 'export const wasmBooted = wasm.booted\n';
+      if(wasmBindgen.nodejs) {
+        contents += 'module.exports.wasmBooted = wasm.booted\n';
+      } else {
+        contents += 'export const wasmBooted = wasm.booted\n';
+      }
     }
     const wasmImport = suffixlessPath + '_bg';
     const includeRequest = loaderUtils.stringifyRequest(self, wasmImport);
 
-    contents = contents.replace(`from './${path.basename(wasmImport)}'`, `from ${includeRequest}`);
+    if(wasmBindgen.nodejs) {
+      contents = contents.replace(`require('./${path.basename(wasmImport)}')`, `require(${includeRequest})`);
+    } else {
+      contents = contents.replace(`from './${path.basename(wasmImport)}'`, `from ${includeRequest}`);
+    }
     return contents;
   }
 };
@@ -150,7 +168,10 @@ const loadRaw = async function (self, {release, gc, target}, srcDir) {
     wasmFile = gcWasmFile;
   }
 
-  return await fse.readFile(wasmFile);
+  const includeRequest = loaderUtils.stringifyRequest(self, wasmFile);
+
+  let contents = `export * from ${includeRequest};`
+  return contents; 
 };
 
 const load = async function (self) {

@@ -1,6 +1,7 @@
-import loadWasm from './myrustlib/src/lib.rs';
 
 export const run = async () => {
-  const result = await loadWasm();
-  return result.instance.exports.add(1, 2);
+  const result = await import('./myrustlib/src/lib.rs');
+  return result.add(1, 2);  
 };
+
+run().then((e) => console.log(e));

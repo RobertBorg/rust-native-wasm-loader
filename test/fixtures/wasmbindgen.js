@@ -1,6 +1,6 @@
-import { add, wasmBooted } from './mywasmbindgenlib/src/lib.rs';
-
 export const run = async () => {
-  await wasmBooted;
+  const {add} = await import('./mywasmbindgenlib/src/lib.rs');
   return add('Hello, ', 'World!');
 };
+
+run().then((res) => console.log(res));

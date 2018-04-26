@@ -101,6 +101,45 @@ exports[`rust-native-wasm-loader loads a simple cargo project: output 1`] = `3`;
 
 exports[`rust-native-wasm-loader loads a simple cargo project: warnings 1`] = `Array []`;
 
+exports[`rust-native-wasm-loader loads a wasm-bindgen project with typescript support 1: dependencies 1`] = `
+Set {
+  "node_modules/@types/node/index.d.ts",
+  "node_modules/@types/node/inspector.d.ts",
+  "node_modules/typescript/lib/lib.es2015.collection.d.ts",
+  "node_modules/typescript/lib/lib.es2015.core.d.ts",
+  "node_modules/typescript/lib/lib.es2015.d.ts",
+  "node_modules/typescript/lib/lib.es2015.generator.d.ts",
+  "node_modules/typescript/lib/lib.es2015.iterable.d.ts",
+  "node_modules/typescript/lib/lib.es2015.promise.d.ts",
+  "node_modules/typescript/lib/lib.es2015.proxy.d.ts",
+  "node_modules/typescript/lib/lib.es2015.reflect.d.ts",
+  "node_modules/typescript/lib/lib.es2015.symbol.d.ts",
+  "node_modules/typescript/lib/lib.es2015.symbol.wellknown.d.ts",
+  "node_modules/typescript/lib/lib.es5.d.ts",
+  "node_modules/util/util.js",
+  "test/fixtures/mywasmbindgenlib/src/lib.rs",
+  "test/fixtures/mywasmbindgenlib/target/wasm32-unknown-unknown/release/bind_gen/mywasmbindgenlib.d.ts",
+  "test/fixtures/mywasmbindgenlib/target/wasm32-unknown-unknown/release/bind_gen/mywasmbindgenlib.js",
+  "test/fixtures/mywasmbindgenlib/target/wasm32-unknown-unknown/release/bind_gen/mywasmbindgenlib_bg.js",
+  "test/fixtures/mywasmbindgenlib/target/wasm32-unknown-unknown/release/bind_gen/mywasmbindgenlib_bg.wasm",
+  "test/fixtures/wasmbindgen.ts",
+}
+`;
+
+exports[`rust-native-wasm-loader loads a wasm-bindgen project with typescript support 1: errors 1`] = `
+Array [
+  "Sync WebAssembly compilation is not yet implemented",
+  "[tsl] ERROR in test/fixtures/wasmbindgen-rust-error.ts(1,33)
+      TS2307: Cannot find module './mywasmbindgenerrorlib/src/lib.rs'.",
+  "[tsl] ERROR in test/fixtures/wasmbindgen-type-error.ts(1,15)
+      TS2305: Module '\\"test/fixtures/mywasmbindgenlib/src/lib.rs\\"' has no exported member 'wasmBooted'.",
+  "[tsl] ERROR in test/fixtures/wasmbindgen-type-error.ts(5,10)
+      TS2554: Expected 2 arguments, but got 3.",
+]
+`;
+
+exports[`rust-native-wasm-loader loads a wasm-bindgen project with typescript support 1: warnings 1`] = `Array []`;
+
 exports[`rust-native-wasm-loader loads a wasm-bindgen project with typescript support and a rust error: dependencies 1`] = `
 Set {
   "node_modules/@types/node/index.d.ts",
